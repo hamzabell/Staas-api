@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Token {
+  id Int @default(autoincrement()) @id
+  secret String
+  email String
+  verified Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  companyId Int
+  company Company @relation(fields: [companyId], references: [id])
+}
+
+
+model Device {
+  id Int @default(autoincrement()) @id
+  name String
+  model String
+  email String
+  secret String
+  apiKey String @unique
+  platform String
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  companyId Int
+  company Company @relation(fields: [companyId], references: [id])
+
+
+  Lateness Lateness[]
+  attendance Attendance[]
+}
+
+model Company {
+  id Int @default(autoincrement()) @id
+  name String @unique
+  licenseKey String @unique
+  domainAddress String @unique
+  licensedUserCount Int
+  adminEmail String @unique
+  addedOn DateTime @default(now())
+  devices Device[]
+  tokens Token[]
+  shifts Shift[]
+}
+
+
+enum DAYS {
+  sunday
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+}
+
+model Shift {
+  id Int @default(autoincrement()) @id
+  openingTime String
+  closingTime String
+  name String
+  days DAYS[]
+
+  companyId Int
+  company Company @relation(fields: [companyId], references: [id])
+  attendance Attendance[]
+  lateness Lateness[]
+}
+
+model Attendance {
+  id Int @default(autoincrement()) @id
+  shiftId Int
+  shift Shift @relation(fields: [shiftId], references: [id])
+  timeOut DateTime?
+  timeIn DateTime
+  lat String
+  long String
+
+  deviceId Int
+  device Device @relation(fields: [deviceId], references: [id])
+}
+
+model Lateness {
+  id Int @default(autoincrement()) @id
+  shiftId Int
+  deviceId Int
+  reason String
+
+
+  shift Shift @relation(fields: [shiftId], references: [id])
+  device Device @relation(fields: [deviceId], references: [id])
+}
